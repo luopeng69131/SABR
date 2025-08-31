@@ -12,9 +12,9 @@
    - Starting from the pretrained model, applies **PPO (Proximal Policy Optimization)** for deeper exploration and policy improvement.  
    - Enhances adaptability and robustness under complex and diverse network conditions.
 
-[SABR overview](./assets/sabr.png)
+![SABR overview](./assets/sabr.png)
 
----
+
 
 ## Prerequisites
 
@@ -25,7 +25,7 @@
   pip install -r requirements.txt
   ```
 
----
+
 
 ## Dataset: ABRBench
 
@@ -40,7 +40,7 @@
    └── ...
    ```
 
----
+
 
 ## Train & Evaluate: SABR
 
@@ -68,7 +68,7 @@ python train_sabr.py
 ```
 After training, the script will **automatically** evaluate on each **test set** and **OOD set**, and write out the results.
 
----
+
 
 ## Learning-based Baselines: Comyco & Pensieve
 
@@ -84,7 +84,7 @@ python train_pensieve.py
 ```
 After training, each baseline is **automatically** evaluated on all **test** and **OOD** sets.
 
----
+
 
 ## Rule-based Baselines
 
@@ -121,16 +121,15 @@ python run_bs_mpc.py mfd
 ```
 > Note: `dp_my` may fail on some trace sets (you can skip it if needed).
 
----
 
-## Visualization
+## QoE Results 
 
 After running rule-based (and learning) methods, use the plotting script to compare QoE across schemes. Select which schemes to display via **`SCHEMES`** in `plot_results.py`, then:
 ```bash
 python plot_results.py
 ```
+![QoE results](./assets/qoe.png)
 
----
 
 ## FAQ
 

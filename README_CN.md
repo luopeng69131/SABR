@@ -10,7 +10,7 @@
    - 以预训练模型为基础，采用 **PPO（Proximal Policy Optimization）** 进行深度探索和策略优化。  
    - 提升模型在复杂网络条件下的自适应能力和鲁棒性。 
 
-[SABR 原理](./assets/sabr.png)
+![SABR 原理](./assets/sabr.png)
 
 <!-- > 你可以把一张结构图放在 `docs/assets/sabr.png`，然后在文档中引用：  
 > `![SABR 逻辑示意图](docs/assets/sabr.png)`  
@@ -129,7 +129,7 @@ python run_bs_mpc.py mfd
 ```bash
 python plot_results.py
 ```
- 
+![QoE results](./assets/qoe.png)
 <!-- 你也可以把一张示意图（例如 `docs/assets/compare.png`）插入 README，展示对比效果。 -->
 
 ## 常见问题（FAQ）
