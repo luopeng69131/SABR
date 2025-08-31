@@ -1,4 +1,4 @@
-# SABR
+# SABR: A Stable Adaptive Bitrate Framework Using Behavior Cloning Pretraining and Reinforcement Learning Fine-Tuning
 
 [中文 README](./README_CN.md)
 

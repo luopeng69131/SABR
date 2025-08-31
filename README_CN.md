@@ -1,4 +1,4 @@
-# SABR
+# SABR: A Stable Adaptive Bitrate Framework Using Behavior Cloning Pretraining and Reinforcement Learning Fine-Tuning
 
 **SABR (Stable Adaptive Bitrate)** 是一个面向自适应码率（ABR）决策的学习框架。SABR 引入了**两阶段训练范式 Pretraining + Fine-tuning**：
 
