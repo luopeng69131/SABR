@@ -1,0 +1,216 @@
+pantheon_ABR 2025 0420
+
+原始项目comyco_torch, 在其buffer_4g分支的基础上对其重构构建新项目：pantheon_ABR
+
+!!!【注意】程序必须在项目根目录下运行，否则相对路径依赖解析会有问题!!!
+原因：相对目录'./'解析依赖于CWD(当前程序执行目录)
+---------------------
+Video: 2025 0812 updated
+1 envivio_3g是hongzimao/pensieve的视频size,对应hongzimao的video_server
+2 envivio_4g是greenLv/pensieve_retrain的视频size，无对应视频video_cut;
+我做了一些调整，删除了49块以上的chunk
+
+3 4g_bunny_byme是我早期40Mbps的视频size，视频Video_cut 对应我切的40 mbps版本
+4 big_bunny_16mbps是因为40mbps的视频会出发超出dash.js缓存，所以使用16mbps作为最大缓存
+
+Version SABR: 2025 0824 updated
+train_sabr.py 默认dagger BC版本
+train_sabr_dpo.py dagger bc版本加入DPO训练参数，上一个版本最后感觉可以不要了
+train_sabr_tune_param： 在train_sabr版本上，设置网络结构（单层神经元），dagger iteration；
+同时共享PPO的optimizer；加入随机性entropy 系数目前设置为0
+
+beam search 的beam目前只能手动在env_rl_torch中设置 设置为15时解决puf21效果不好的问题
+（与cmc接近了，但是dagger iteration也得多）
+
+-------------
+baseline:
+bs(future), mfd(mpc_future_bandwidth) | run_bs_mpc.py
+bb, bola, quetra, robust_mpc (c++：run_rmpc_c_version/ mpc_py)
+dp | dp_my_rep.cc
+comyco pensieve
+plot_result是从pensieve_retrain中复制过来的，测试完成
+
+0616 增加自动运行所有baselines的脚本：ex_abr_baseline.sh
+----------------
+main 分支是comyco_torch沿袭下来的项目，只是对一些可变配置放入了config
+stable_baseline分支是准备添加sb PPO项目
+-------------------
+comyco_dpo: train_sft.py  run_sft_model.py; 
+如果还原最初cmc需要修改il_torch的train_step, 看另外一个注释 
+
+stable baseline ppo: train_ppo_sb.py， test_ppo_sb.py；
+train_dagger_ppo.py：在特定数据集上训练dagger+ppo
+train_sabr_dagger.py: stable abr, 可以在多个数据集上混合训练dagger+ppo
+test_ppo_sb.py 测试训练模型的脚本
+--------
+训练和测试注意事项
+
+无论训练还是测试时最好两个config的数据集对齐，
+<config.h对应的c++文件重新编译>
+
+训练dagger_ppo时（train_dagger_ppo， train_sabr_dagger）注意：
+需要对齐config中的数据集，3g_test和green_test的混合数据在config.h中也有对应
+因为config.h中的bit_level、rebuf_penalty_coef是与训练c++脚本关联，
+如果不调整bs/mpc，会使用到错误的系数
+
+测试实验baseline， 对齐两个config， 重新编译c++
+测试test_ppo_sb， config.py调整到特定数据集，（log_dir和test_trace自动加载），
+带模型路径作为参数运行即可（log_dir和test_trace不用手动指定）；
+尽管可以选择手动指定，但是不建议，因为bit_level、rebuf_penalty_coef 也是与config相关
+
+
+==============================
+0514 开启了 stable baseline 分支
+train_ppo_sb.py， test_ppo_sb.py 初步测试完成，单环境训练
+----------
+
+0516 obs_rms 从vecenv环境中提取出来了，在test_ppo_sb中是自己实现的
+而不是加载环境实现的了
+---------------
+0517 dagger 开发完成，train_dagger 
+----------------
+
+0518 PPO + dagger开发完成， train_dagger内；模型存储在model_data/rl_model
+实验测试脚本：ex_dagger_ppo.py, 基于train_dagger 开发
+通过调整是否dagger训练+train step实现模型测试
+完成了eval函数，和test脚本（test_ppo_sb）的调整
+--------
+0519
+增加了并行环境 
+
+把dagger做了调整，只集体reset一次（setup_learn, 模仿PPO），
+后续让vec env自行reset （强制输入env必须是vecenv）
+否则有时训练时会强制截断episode, 提前reset
+------
+0521
+调整了config.py 和 config.h 把所有env配置都集中在这两个config中
+原来dp.cc还需要到文件里调，现在全集中在这里了，测试后成功
+
+train_ppo_dagger 设置了参数 is_dagger_train (1/0), is_obs_norm (1/0), \
+parallel_env (int) and ppo_step 100_000
+------------
+0522 增加了新的baseline quetra
+manual NORMARLIZED 重新设置为True; config加入了新的数据集
+
+0601
+增加trace兼容性函数加载函数：train trace 为list时 同时加载；
+Test trace为list时，逐个测试 eval_model_trace_list 
+
+增加stable abr模型脚本和训练trace config
+修复了plot result没有筛选名称的机制，导致dp运行时 无法绘图
+---------------
+0617 stable abr dagger+ppo初次完成
+
+---------------------
+0621 
+config.h dataset 20(3g_test) 30(green_test)只是为了适配dagger ppo训练用；
+不做测试使用，因此log_dir和test_trace设置为空
+
+--------------------
+0630 更新了cmc 适配config
+green_test加入了norway数据集，提高模型的鲁棒性
+
+eval_model_trace_list 在创建文件夹前会清空；
+保证数据集调整时，不同数据集（先前）的结果会被清空
+否则先前数据集的结果不会被覆盖，导致输出错误的qoe
+
+eval_model_trace_list 函数加入了file_name 和scipt 参数
+用于确定执行脚本，和 筛选日志，主要是为了兼容comyco
+-----------------------------
+0702 增加了pensieve 适配config
+把pensieve的代码美观性做了调整，train_env融入到了env_rl_torch
+
+
+目前，rl的三个测试脚本，在所有数据集上的结果，都是训练过程调用eval_model_list获得的；
+未来需要考虑根据数据集名称，自动分配到对应log目录？
+---------------------------------
+0707  comyco 加入dpo训练
+
+0824 sabr三个版本
+train_sabr.py 默认dagger BC版本
+train_sabr_dpo.py 在train_sabr版本加入DPO训练参数（输入参数4->5），上一个版本最后感觉可以不要了
+
+train_sabr_tune_param： 在train_sabr版本上，设置网络结构（单层神经元），dagger iteration；
+同时共享PPO的optimizer；加入随机性entropy 系数目前设置为0
+
+beam search 的beam目前只能手动在env_rl_torch中设置 设置为15时解决puf21效果不好的问题
+（与cmc接近了，但是dagger iteration也得多）
+
+为了让高beam（15）加速，于是将Dagger 的vec env和 PPO vec env分离
+Dagger 的vec env使用sub Proc (替代dummy)实现加速
+
+
+*****************************************************************
+*****************************************************************
+------------
+comyco_torch
+
+main 原始torch版本
+entropy 在main版本的基础上修复了entropy的错误
+dpo 在entropy版本上实现了dpo训练，原始的dagger训练只是注释
+buffer 在dpo版本上实现的，加入buffer w
+
+buffer_4g 在buffer基础上改为4g 5g数据集，参考pensieve-retrain
+
+
+=========================
+1125 
+ comyco 增加了 torch 版本，修复了原来torch版本中 交叉熵 未输入logit的错误，已经可以正常训练；
+train_my  test_rl_torch il_torch.py都是我新写的torch相关脚本；
+env_rl_torch 相比原env只是修改了导入名称libcorerl（这个其实是原comyco编译出来的c++库，只是名称被占用了 重新调整了）
+
+原comyco对熵是采用了极小化，这个应该是错误的，准备修复-----对应bak/il_torch_1112.py
+
+
+
+1228
+buffer w 加入到c++的mpc和beam search的实现中
+test_bs_mpc 为启动脚本，test_cenv为配套脚本；
+--------------
+2025 0401 buffer_4g 在 buffer基础上修改
+4G 数据集 pensieve retrain
+修改 video size； 去除txt 后缀,统一调整为 49行
+替换trace
+
+修改动作空间和奖励函数系数： VIDEO_BIT_RATE, REBUF_PENALTY
+comyco : fixed_env, test_rl_torch；  rl 测试脚本
+env_rl_torch，corerl.cc; rl 训练相关脚本
+test_bs_mpc, test_cenv; mpc bs baseline脚本
+修改 librl_cc 对应的脚本: VIDEO_BIT_RATE, REBUF_PENALTY
+
+修复了run_bs_mpc中未加入Buffer_w起始参数导致运行报错的问题，
+以及test_cenv导入libcore名称不正确问题
+
+将mpc、bs 的baseline 与 rl训练环境 合并至CC脚本中，通过is_train控制
+开启了: 每次随机带宽起始点，随机序列号
+关闭后：带宽起始点为1； 序列号为1
+修改内容：初始化和get_video_chunk
+bs 感觉 N = 5就足够
+
+0411
+加入Normalize 参数，特征 2 和 4 缩小10倍，与pensieve retrain保持一致
+
+0413
+robust_mpc.cc (rmpc): 为了加速robust mpc的计算，基于baseline_mpc 修改得到的C++ robust mpc
+相关脚本：
+运行（run_bs_mpc）-> 环境（test_cenv_rmpc）->robustmpc.so
+mpc c++与py版本差别：past_bw c++版本每次reset会清空之前past_bw，做的更精细
+
+!!发现了mpc c++ (env_rl, robust_mpc)中get_optimal函数错误更新last_bit_rate的bug
+每个combo循环应该独立使用cur_last_bit_rate, 否则起始last_bit_rate被覆盖 
+
+0419：
+增加baseline/bola ，从Merina方法移植过来
+
+0420
+把Bit_rate  penalty, trace 和 video_size_path 放入config中（config.py, config.h）
+之后考虑dp bb, 并测试Plot_results
+C++相关需要重新编译，当更换数据集后
+
+
+
+
+
+
+
+

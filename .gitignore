@@ -1,0 +1,14 @@
+**/__pycache__/
+
+libcore.cpython-37m-x86_64-linux-gnu.so
+
+*.so
+**/*.so
+**/log_sim_*
+
+comyco/*
+test_results/
+model_data/*
+video_trace/trace/*
+bak/*
+experiment_script
