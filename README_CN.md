@@ -4,11 +4,9 @@
 
 1. **行为克隆 (Behavior Cloning, BC) 预训练**  
    - 基于专家策略（如 MPC 束搜索）的演示数据，利用 **DPO（Direct Preference Optimization）** 算法进行高效稳定的模仿学习。  
-   - 获得一个性能稳定的初始模型。  
-
 2. **强化学习 (Reinforcement Learning, RL) 微调**  
    - 以预训练模型为基础，采用 **PPO（Proximal Policy Optimization）** 进行深度探索和策略优化。  
-   - 提升模型在复杂网络条件下的自适应能力和鲁棒性。 
+ 
 
 ![SABR 原理](./assets/sabr.png)
 
@@ -123,7 +121,7 @@ python run_bs_mpc.py mfd
 
 
 
-## 结果可视化
+## QoE结果
 
 所有规则基线运行完后，可以使用plot_results.py获得不同方法的QoE性能。在 `plot_results.py` 中通过 **`SCHEMES`** 变量选择需要展示的方案集合。运行指令：
 ```bash
@@ -149,11 +147,7 @@ python plot_results.py
 
 
 
-
-
-
-
-## 引用与致谢
+## 致谢
 - 参考实现：
   - [pensieve](https://github.com/hongzimao/pensieve) 
   - [pensieve_retrain](https://github.com/GreenLv/pensieve_retrain)  
